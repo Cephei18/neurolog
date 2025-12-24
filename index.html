@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <title>NeuroLog</title>
   <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <!-- Local bundle to avoid CSP/Eval issues on Vercel -->
+  <script src="/ethers.min.js" defer></script>
+  <script src="/app.js" defer></script>
 </head>
-<body>
 
+<body>
   <h1>NeuroLog</h1>
   <p>On-chain emotional check-in & self-commitment journal</p>
 
@@ -41,9 +43,5 @@
 
   <button id="refreshBtn">Refresh</button>
   <button id="completeBtn">Complete Check-In</button>
-
-  <!-- ✅ LOAD JS ONLY ONCE, AT THE END -->
-  <script src="app.js"></script>
-
 </body>
 </html>
