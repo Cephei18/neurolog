@@ -1,5 +1,4 @@
 alert("app.js is running");
-const ethers = window.ethers;
 
 let provider;
 let signer;
@@ -22,24 +21,31 @@ const output = document.getElementById("checkinOutput");
 
 connectBtn.onclick = async () => {
   if (!window.ethereum) {
-    alert("Install MetaMask");
+    alert("Please install MetaMask");
     return;
   }
 
-  provider = new ethers.BrowserProvider(window.ethereum);
-  signer = await provider.getSigner();
+  provider = new ethers.providers.Web3Provider(window.ethereum);
+  await provider.send("eth_requestAccounts", []);
+  signer = provider.getSigner();
+
   contract = new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
 
   walletAddressEl.innerText = `Connected: ${await signer.getAddress()}`;
 };
 
 createBtn.onclick = async () => {
-  const mood = document.getElementById("mood").value;
-  const durationMinutes = document.getElementById("duration").value;
+  if (!contract) {
+    alert("Connect wallet first");
+    return;
+  }
+
+  const mood = Number(document.getElementById("mood").value);
+  const durationMinutes = Number(document.getElementById("duration").value);
   const stakeEth = document.getElementById("stake").value;
 
   const durationSeconds = durationMinutes * 60;
-  const value = ethers.parseEther(stakeEth);
+  const value = ethers.utils.parseEther(stakeEth); // ✅ v5 correct
 
   const tx = await contract.createCheckIn(
     mood,
@@ -54,12 +60,19 @@ createBtn.onclick = async () => {
 refreshBtn.onclick = loadCheckIn;
 
 completeBtn.onclick = async () => {
+  if (!contract) {
+    alert("Connect wallet first");
+    return;
+  }
+
   const tx = await contract.completeCheckIn();
   await tx.wait();
   loadCheckIn();
 };
 
 async function loadCheckIn() {
+  if (!contract) return;
+
   const data = await contract.getMyCheckIn();
 
   const moodMap = ["Calm", "Focused", "Anxious", "Overwhelmed"];
@@ -67,10 +80,10 @@ async function loadCheckIn() {
 
   output.innerText = `
 Mood: ${moodMap[data[0]]}
-Created: ${new Date(Number(data[1]) * 1000)}
-Deadline: ${new Date(Number(data[2]) * 1000)}
+Created: ${new Date(data[1].toNumber() * 1000)}
+Deadline: ${new Date(data[2].toNumber() * 1000)}
 Status: ${statusMap[data[3]]}
-Stake (wei): ${data[4]}
+Stake (wei): ${data[4].toString()}
 Exists: ${data[5]}
 `;
 }
